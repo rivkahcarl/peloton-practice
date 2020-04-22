@@ -18,8 +18,7 @@ xx = s.post('https://api.onepeloton.com/auth/login', json=payload)
 '''
 The following script has been a way for me to play around with my own Peloton fitness data. My family's Peloton bicycle and my most recent download of the Peloton Digital Application
 has been motivating my workouts during this period of social distancing. As a data person, I have been fascinated by the amount of data amassed, shared and available for visualization 
-while working out. 
-At any given moment, there are people across the world riding with me, running with or stretching with me. I know when a friend has a taken a new class and I know if I have beat 
+while working out. At any given moment, there are people across the world riding with me, running with or stretching with me. I know when a friend has a taken a new class and I know if I have beat 
 my record from the previous day. How does Peloton do it? What is the data structure underlying and powering the app, the tablet, the website, the notifications? 
 
 I must give credit to 
@@ -54,7 +53,7 @@ I hope to continue to explore and document more of the fields and explain what t
 # u'paired_devices', u'total_pedaling_metric_workouts', u'total_workouts', u'default_max_heart_rate', u'name', u'is_fitbit_authenticated', u'has_active_device_subscription', u'gender', 
 # u'created_at', u'workout_counts', u'total_non_pedaling_metric_workouts', u'member_groups', u'default_heart_rate_zones', u'image_url', u'total_following', u'estimated_cycling_ftp', u'can_charge', u'total_followers']
 
-## print meContent['id'] 
+
 userid = "c3ff56ef4c834f8eb682e724494e1d27" # meContent['id']
 
 #########################################
@@ -126,6 +125,122 @@ workoutPerformanceEndpoint = 'https://api.onepeloton.com/api/workout/%s/performa
 # [{u'display_name': u'Distance', u'slug': u'distance', u'value': 1.23, u'display_unit': u'mi'}, {u'display_name': u'Elevation', u'slug': u'elevation', u'value': 74, u'display_unit': u'ft'}, {u'display_name': u'Calories', u'slug': u'calories', u'value': 146, u'display_unit': u'kcal'}]
 
 
+workoutInstructorEndpoint = 'https://api.onepeloton.com/api/workout/%s?joins=ride.instructor'
+
+# "https://api.onepeloton.com/api/workout/<workout_id>?joins=ride.instructor"
+# "https://api.onepeloton.com/api/workout/<workout_id>?joins=ride,ride.instructor"
+# These two endpoints are identical, perhaps once joining with the ride.instructor data, the entire ride dict is included
+
+###### KEY NAMES 
+'''
+"created_at", "device_type", "end_time", "fitbit_id", "fitness_discipline", "has_pedaling_metrics", "has_leaderboard_metrics",
+"id", "is_total_work_personal_record", "metrics_type", "name", "peloton_id", "platform", "start_time", "strava_id", "status",
+"timezone", "title", "total_work", "user_id", "workout_type",
+"ride", 
+"ride.instructor", 
+"ride.instructor.id",
+"ride.instructor.bio",
+"ride.instructor.short_bio",
+"ride.instructor.coach_type",
+"ride.instructor.is_filterable",
+"ride.instructor.is_visible",
+"ride.instructor.list_order",
+"ride.instructor.featured_profile",
+"ride.instructor.film_link",
+"ride.instructor.facebook_fan_page",
+"ride.instructor.music_bio",
+"ride.instructor.spotify_playlist_uri",
+"ride.instructor.background",
+"ride.instructor.ordered_q_and_as",
+"ride.instructor.instagram_profile",
+"ride.instructor.strava_profile",
+"ride.instructor.twitter_profile",
+"ride.instructor.quote",
+"ride.instructor.username",
+"ride.instructor.name",
+"ride.instructor.first_name",
+"ride.instructor.last_name",
+"ride.instructor.user_id",
+"ride.instructor.life_style_image_url",
+"ride.instructor.bike_instructor_list_display_image_url",
+"ride.instructor.web_instructor_list_display_image_url",
+"ride.instructor.ios_instructor_list_display_image_url",
+"ride.instructor.about_image_url",
+"ride.instructor.image_url",
+"ride.instructor.jumbotron_url",
+"ride.instructor.jumbotron_url_dark",
+"ride.instructor.jumbotron_url_ios",
+"ride.instructor.web_instructor_list_gif_image_url",
+"ride.instructor.instructor_hero_image_url",
+"ride.instructor.fitness_disciplines",
+"ride.class_type_ids",
+"ride.content_provider",
+"ride.content_format",
+"ride.description",
+"ride.difficulty_estimate",
+"ride.overall_estimate",
+"ride.difficulty_rating_avg",
+"ride.difficulty_rating_count",
+"ride.difficulty_level",
+"ride.duration",
+"ride.equipment_ids",
+"ride.equipment_tags",
+"ride.extra_images",
+"ride.fitness_discipline",
+"ride.fitness_discipline_display_name",
+"ride.has_closed_captions",
+"ride.has_pedaling_metrics",
+"ride.home_peloton_id",
+"ride.id",
+"ride.image_url",
+"ride.instructor_id",
+"ride.is_archived",
+"ride.is_closed_caption_shown",
+"ride.is_explicit",
+"ride.has_free_mode",
+"ride.is_live_in_studio_only",
+"ride.language",
+"ride.origin_locale",
+"ride.length",
+"ride.live_stream_id",
+"ride.live_stream_url",
+"ride.location",
+"ride.metrics",
+"ride.original_air_time",
+"ride.overall_rating_avg",
+"ride.overall_rating_count",
+"ride.pedaling_start_offset",
+"ride.pedaling_end_offset",
+"ride.pedaling_duration",
+"ride.rating",
+"ride.ride_type_id",
+"ride.ride_type_ids",
+"ride.sample_vod_stream_url",
+"ride.scheduled_start_time",
+"ride.series_id",
+"ride.sold_out",
+"ride.studio_peloton_id",
+"ride.title",
+"ride.total_ratings",
+"ride.total_in_progress_workouts",
+"ride.total_workouts",
+"ride.vod_stream_url",
+"ride.vod_stream_id",
+"ride.captions",
+"ride.excluded_platforms",
+"created",
+"device_time_created_at",
+"achievement_templates",
+"leaderboard_rank",
+"total_leaderboard_users",
+"ftp_info",
+"ftp_info.ftp",
+"ftp_info.ftp_source",
+"ftp_info.ftp_workout_id",
+"device_type_display_name"
+'''
+
+
 
 
 
@@ -136,18 +251,24 @@ for wkid in listOfWorkoutIds:
 	if workoutDetail['fitness_discipline'] != 'meditation':
 
 		workoutDict = dict(workoutId=workoutDetail['id'], fitness_discipline = workoutDetail['fitness_discipline'], created_at = datetime.fromtimestamp(workoutDetail['created_at']))
-		# Data fields I plan to use now:
-		# workoutDetail['id']
-		# workoutDetail['fitness_discipline']
-		# workoutDetail['total_leaderboard_users']
-		# workoutDetail['leaderboard_rank']
-		# workoutDetail['created_at']
-		# workoutDetail['start_time']
 
+		# Call performance Endpoint to get calorie information
 		workoutPerformanceDetail = s.get(workoutPerformanceEndpoint % (wkid)).json()
+
 		# Calories are found in a list of dicts with a display name, slug and value (See sample above)
 		calorieOutput = [i for i in workoutPerformanceDetail['summaries'] if (i['slug'] == 'calories')][0]['value']
 		workoutDict['calories'] = calorieOutput
+
+		workoutInstructorDetail = s.get(workoutInstructorEndpoint % (wkid)).json()
+		# Instructor name are found within 'ride.instructor.name'
+
+		if workoutInstructorDetail['ride']['instructor'] is None:
+			workoutDict['instructorName'] = "Missing Instructor Information"
+			print "Workout is missing Instructor information, Id= %s" % (wkid) 
+		else: 
+			workoutDict['instructorName'] = workoutInstructorDetail['ride']['instructor']['name']
+
+		# Append each dict to a list to get ready for a dataframe
 		finalData.append(workoutDict)
 	else:
 		pass #Dont care for meditation classes at this point in time- mostly concerned about active fitness
@@ -174,15 +295,30 @@ ax.set_xticklabels(df2.DateName)
 
 # df['Daily Calories']= df.apply(lambda row: row.a + row.b, axis=1)
 
-#set ticks every week
-# df2.xaxis.set_major_locator(mdates.WeekdayLocator())
-#set major ticks format
-# df2.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
+## Output and show chart 1
+# plt.show()
+
+# Average calories by day during Corona social distancing
+df2['Month'] = df2['DateName'].str.split(" ", n=1, expand=True)[0]
+df2['Year'] = df2['DateName'].str.split(" ", expand=True)[2]
+
+df3 = df2[(df2['Year'] == '2020') & (df2['Month'].isin(['March', 'April']))] 
+average_calorie_per_day = df3['calories'].mean()
+
+print "Average Calories Per Day during Corona, %s" % average_calorie_per_day
+
+# Task 2: Number of classes per instructor
+df4 = df.groupby("instructorName", as_index=True).count()[['workoutId']]
+
+# Reset index so instructorName is a column in dataframe
+df4 = df4.reset_index()
+
+df4 = df4.rename(columns={'workoutId':'CountOfClasses'})
+df4 = df4.sort_values(by=['CountOfClasses'], ascending=False)
+
+ax = df4.plot(x='instructorName', y='CountOfClasses', kind='barh') #, orientation='horizontal')
 
 plt.show()
-
-
-
 
 
 # Perhaps to output to a csv at a later point to run through other tools: 
